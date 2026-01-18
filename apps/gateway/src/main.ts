@@ -16,3 +16,7 @@ async function Bootstrap(){
 }
 
 Bootstrap()
+
+
+// gateway ->http controller -> service
+// service -> service

@@ -30,6 +30,32 @@ export class RpcAllExecptionFilter extends BaseRpcExceptionFilter {
       code: 'INTERNAL',
       message: 'Internal error',
     };
+    
     return super.catch(new RpcException(payload), host);
   }
 }
+
+
+
+
+// import { BaseRpcExceptionFilter, RpcException } from '@nestjs/microservices';
+// import { ArgumentsHost, Catch, HttpException } from '@nestjs/common';
+// import { RpcErrorPayload } from './rpc.types';
+// import { ValidationError } from 'class-validator';
+
+// @Catch()
+// export class RpcAllExecptionFilter extends BaseRpcExceptionFilter {
+//   catch(exception: any, host: ArgumentsHost) {
+//     // RpcException is already safe
+//     if (exception instanceof RpcException) {
+//       return super.catch(exception, host);
+//     }
+
+//     // fallback for unexpected errors
+//     const payload = {
+//       code: 'INTERNAL',
+//       message: exception?.message || 'Internal server error',
+//     };
+//     return super.catch(new RpcException(payload), host);
+//   }
+// }

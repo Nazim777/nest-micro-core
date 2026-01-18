@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { CatalogModule } from './catalog.module';
 import { Logger } from '@nestjs/common';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { applyToMicroserviceLayer } from '@app/rpc';
 
 async function bootstrap() {
   process.title = 'catalog';
@@ -24,6 +25,7 @@ async function bootstrap() {
 
   app.enableShutdownHooks();
 
+  applyToMicroserviceLayer(app)
   await app.listen();
 
   logger.log(`Catalog RMQ listening on ${catalogQueue} via ${rmqUrl}`);
