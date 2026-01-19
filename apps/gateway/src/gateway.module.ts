@@ -7,6 +7,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UserModule } from './users/user.module';
 import { AuthModule } from './auth/auth.module';
 import { ProductHttpController } from './products/product.controller';
+import { SearchHttpController } from './search/search.controller';
 
 @Module({
   imports: [
@@ -24,7 +25,7 @@ import { ProductHttpController } from './products/product.controller';
           urls: [process.env.RABBITMQ_URL ?? 'amqp://localhost:5672'],
           queue: process.env.CATALOG_QUEUE ?? 'catalog_queue',
           queueOptions: {
-            durable: false,
+            durable: false
           },
         },
       },
@@ -52,7 +53,7 @@ import { ProductHttpController } from './products/product.controller';
       },
     ]),
   ],
-  controllers: [GatewayController,ProductHttpController],
+  controllers: [GatewayController,ProductHttpController,SearchHttpController],
   providers: [GatewayService],
 })
 export class GatewayModule {}

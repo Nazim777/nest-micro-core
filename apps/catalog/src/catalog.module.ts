@@ -6,16 +6,34 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Product, ProductSchema } from './products/product.schema';
 import { ProductController } from './products/product.controller';
 import { ProductService } from './products/product.service';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { ProductEventPublisher } from './events/event.publisher';
 
+// service to service communication search service to catalog service
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal:true
     }),
     MongooseModule.forRoot(process.env.MONGO_URI_CATALOG as string),
-    MongooseModule.forFeature([{name:Product.name,schema:ProductSchema}])
+    MongooseModule.forFeature([{name:Product.name,schema:ProductSchema}]),
+   
+    // catalog directly talk to search service via RMQ client (not via gateway)
+    ClientsModule.register([
+      {
+        name:'SEARCH_EVETNS_CLIENT',
+        transport:Transport.RMQ,
+        options:{
+          urls:[process.env.RABBITMQ_URL ?? 'amqp://localhost:5672'],
+          queue:process.env.SEARCH_QUEUE ?? 'search_queue',
+          queueOptions:{
+            durable: false,
+          }
+        }
+      }
+    ])
   ],
   controllers: [CatalogController,ProductController],
-  providers: [CatalogService,ProductService],
+  providers: [CatalogService,ProductService,ProductEventPublisher],
 })
 export class CatalogModule {}
