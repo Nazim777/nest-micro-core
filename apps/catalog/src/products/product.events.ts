@@ -12,3 +12,15 @@ export type ProductCreatedEvent ={
     createdByClerkUserId:string;
 
 }
+
+export type ProductUpdatedEvent = {
+    productId:string;
+    name:string;
+    description:string;
+    status:'DRAFT' | 'ACTIVE',
+    price:number;
+}
+
+export type ProductDeletedEvent = {
+    productId:string;
+}

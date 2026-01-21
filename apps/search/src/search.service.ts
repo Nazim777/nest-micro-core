@@ -2,6 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { SearchProduct, SearchProductDocument } from './search/search.scheam';
 import { Model } from 'mongoose';
+import {
+  DeleteSearchByProductId,
+  ProductUpdatedForSearchDto,
+} from './events/product-event.dto';
+import { rpcNotFound } from '@app/rpc';
 
 @Injectable()
 export class SearchService {
@@ -10,7 +15,7 @@ export class SearchService {
     private readonly model: Model<SearchProductDocument>,
   ) {}
 
-  noramalizeText(input: { name: string; description: string }) {
+  noramalizeText(input: { name?: string; description?: string }) {
     return `${input.name} ${input.description}`.toLowerCase();
   }
 
@@ -44,7 +49,35 @@ export class SearchService {
     );
   }
 
-  async query (input: { q: string; limit?: number }) {
+  async updateProdctSearch(
+    productUpdatedForSearchDto: ProductUpdatedForSearchDto,
+  ) {
+    const { productId, ...restOfData } = productUpdatedForSearchDto;
+    const normalizedText = this.noramalizeText({
+      name: restOfData?.name,
+      description: restOfData?.description,
+    });
+    const updatedProductSearch = await this.model.findOneAndUpdate(
+      { productId },
+      {
+        $set: {
+          name: restOfData.name,
+          normalizedText,
+          status: restOfData.status,
+          price: restOfData.price,
+        },
+      },
+      { new: true, runValidators: true },
+    );
+
+    if (!updatedProductSearch || updatedProductSearch === null) {
+      rpcNotFound(`Search not found with product id ${productId}`);
+    }
+
+    return updatedProductSearch;
+  }
+
+  async query(input: { q: string; limit?: number }) {
     const q = (input.q ?? '').trim().toLowerCase();
 
     if (!q) {
@@ -61,6 +94,26 @@ export class SearchService {
       .exec();
   }
 
+  async deleteSearchByProductId(
+    deleteSearchByProductId: DeleteSearchByProductId,
+  ) {
+    const deletedSearch = await this.model.findOneAndDelete({
+      productId: deleteSearchByProductId.productId,
+    });
+    if (!deletedSearch) {
+      rpcNotFound(
+        `Search not found with this product id ${deleteSearchByProductId.productId}`,
+      );
+    }
+
+    return {
+      id: deletedSearch._id,
+      productId: deletedSearch.productId,
+      message: 'Search deleted',
+    };
+  }
+
+  
   ping() {
     return {
       ok: true,

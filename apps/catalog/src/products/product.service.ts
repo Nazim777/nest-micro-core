@@ -4,6 +4,7 @@ import { Product, ProductDocument } from './product.schema';
 import { isValidObjectId, Model } from 'mongoose';
 import { rpcBadRequest, rpcNotFound } from '@app/rpc';
 import { ProductEventPublisher } from '../events/event.publisher';
+import { ProductByIdDto, UpdateProductDto } from './product.dto';
 
 @Injectable()
 export class ProductService {
@@ -60,6 +61,34 @@ export class ProductService {
     return newCreatedProduct.toObject();
   }
 
+  async updateProduct(updateProductDto: UpdateProductDto) {
+    const { id, ...rest } = updateProductDto;
+    const updatedProduct = await this.productModel
+      .findByIdAndUpdate(
+        id,
+        {
+          $set: rest,
+        },
+        { new: true, runValidators: true },
+      )
+      .exec();
+
+    if (!updatedProduct) {
+      rpcNotFound(`Product not found with id ${updateProductDto.id}`);
+    }
+
+    // emit the event for update the search service
+    await this.events.productUpdated({
+      productId: String(updatedProduct._id),
+      name: updatedProduct.name,
+      description: updatedProduct.description,
+      price: updatedProduct.price,
+      status: updatedProduct.status,
+    });
+
+    return updatedProduct;
+  }
+
   async listProduct() {
     return await this.productModel.find().sort({ createdAt: -1 }).exec();
   }
@@ -76,5 +105,23 @@ export class ProductService {
     }
 
     return product;
+  }
+
+  async deleteProductById(productByIdDto: ProductByIdDto) {
+    console.log('productId from catalog service',productByIdDto)
+    const deletedProduct = await this.productModel.findByIdAndDelete(
+      productByIdDto.id,
+    );
+    if (!deletedProduct) {
+       rpcNotFound(`Product not found with the id ${productByIdDto.id}`);
+    }
+
+    // emit the event to delete the media and search
+    await this.events.productDeleted({productId:String(deletedProduct._id)})
+
+    return {
+      id: deletedProduct._id,
+      message: 'Product deleted',
+    };
   }
 }

@@ -27,7 +27,34 @@ export class CreateProductDto{
     createdByClerkUserId:string;
 }
 
-export class GetProductByIdDto{
+export class ProductByIdDto{
     @IsString()
     id:string
+}
+
+
+export class UpdateProductDto{
+
+    @IsString()
+    id:string;
+
+    @IsString()
+    @MinLength(2)
+    @IsOptional()
+    name?:string;
+
+
+    @IsString()
+    @MinLength(4)
+    @IsOptional()
+    description?:string;
+
+    @IsNumber()
+    @Min(2)
+    @IsOptional()
+    price?:number;
+
+    @IsString()
+    @IsOptional()
+    status?:ProductStatus
 }

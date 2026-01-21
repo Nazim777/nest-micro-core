@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { CreateProductDto, GetProductByIdDto } from './product.dto';
+import { CreateProductDto, ProductByIdDto, UpdateProductDto } from './product.dto';
 
 @Controller()
 export class ProductController {
@@ -19,8 +19,20 @@ export class ProductController {
     return await this.productService.listProduct();
   }
 
+  @MessagePattern('product.update')
+  async updateProduct(@Payload() payload: UpdateProductDto){
+    const product = await this.productService.updateProduct(payload)
+     return product;
+  }
+
   @MessagePattern('product.getById')
-  async getById(@Payload() payload: GetProductByIdDto) {
+  async getById(@Payload() payload: ProductByIdDto) {
     return await this.productService.getProductById(payload);
   }
+
+  @MessagePattern('product.delete')
+  async deleteProduct(@Payload() payload: ProductByIdDto){
+    return await this.productService.deleteProductById(payload);
+  }
+
 }

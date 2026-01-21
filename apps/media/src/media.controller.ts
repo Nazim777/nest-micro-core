@@ -1,7 +1,11 @@
 import { Controller } from '@nestjs/common';
 import { MediaService } from './media.service';
-import { MessagePattern, Payload } from '@nestjs/microservices';
-import { AttachToProductDto, UploadProductImageDto } from './dto/media.dto';
+import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
+import {
+  AttachToProductDto,
+  DeleteMediaFromDBandCloudByProductIdDto,
+  UploadProductImageDto,
+} from './dto/media.dto';
 
 @Controller()
 export class MediaController {
@@ -15,6 +19,15 @@ export class MediaController {
   @MessagePattern('media.attachImageToProduct')
   async attachProduct(@Payload() payload: AttachToProductDto) {
     return await this.mediaService.attachToProduct(payload);
+  }
+
+  @EventPattern('product.deleted')
+  async deleteMediaFromDBandCloudByProductId(
+    @Payload() payload: DeleteMediaFromDBandCloudByProductIdDto,
+  ) {
+    return await this.mediaService.deleteMediaFromDBandCloudByProductId(
+      payload,
+    );
   }
 
   @MessagePattern('service.ping')

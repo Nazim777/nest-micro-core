@@ -1,10 +1,13 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Inject,
   Param,
   Post,
+  Put,
+  Query,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
@@ -114,6 +117,23 @@ export class ProductHttpController {
     return product;
   }
 
+  @Put('products/:id')
+  @AdminOnly()
+  async updateProduct(
+    @Param('id') id: string,
+    @Body()
+    body: { name: string; description: string; price: number; status: string },
+  ) {
+    try {
+      const updatedProduct = await firstValueFrom(
+        await this.catalogClient.send('product.update', { id, ...body }),
+      );
+      return updatedProduct;
+    } catch (error) {
+      throw mapRpcErrorToHttp(error);
+    }
+  }
+
   // by default i made all the route protected means user has to be authenticated and if we want to make any route publically available we need to use @Public() , this will make the route public
   @Get('products')
   @Public() // public route
@@ -133,6 +153,18 @@ export class ProductHttpController {
     try {
       return await firstValueFrom(
         this.catalogClient.send('product.getById', { id }),
+      );
+    } catch (error) {
+      throw mapRpcErrorToHttp(error);
+    }
+  }
+
+  @Delete('products/:id')
+  @AdminOnly()
+  async deleteProduct(@Param('id') id: string) {
+    try {
+      return await firstValueFrom(
+        this.catalogClient.send('product.delete', { id }),
       );
     } catch (error) {
       throw mapRpcErrorToHttp(error);

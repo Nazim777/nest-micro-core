@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Media, MediaDocument } from './schema/media.schema';
 import { Model } from 'mongoose';
 import { rpcBadRequest, rpcNotFound } from '@app/rpc';
+import { DeleteMediaFromDBandCloudByProductIdDto } from './dto/media.dto';
 
 @Injectable()
 export class MediaService {
@@ -66,6 +67,31 @@ export class MediaService {
       url: String(updated.url),
       publicId: updated.publicId,
       productId: updated.productId,
+    };
+  }
+
+  async deleteMediaFromDBandCloudByProductId(
+    deleteMediaFromDBandCloudByProductIdDto: DeleteMediaFromDBandCloudByProductIdDto,
+  ) {
+    // delete media from DB
+    const deletedMedia = await this.mediaModel.findOneAndDelete({
+      productId: deleteMediaFromDBandCloudByProductIdDto.productId,
+    });
+
+    if (!deletedMedia) {
+      rpcNotFound(
+        `Media not found with the product id ${deleteMediaFromDBandCloudByProductIdDto.productId}`,
+      );
+    }
+
+    // delete media/image from cloud
+    await this.cloudinaryService.deleteFile(deletedMedia.publicId);
+
+    return {
+      id: deletedMedia._id,
+      productId: deletedMedia.productId,
+      publicId: deletedMedia.publicId,
+      message: 'Media deleted from DB and Cloud',
     };
   }
 

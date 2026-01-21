@@ -30,6 +30,17 @@ import { ProductEventPublisher } from './events/event.publisher';
             durable: false,
           }
         }
+      },
+      {
+        name:'MEDIA_EVETNS_CLIENT',
+        transport:Transport.RMQ,
+        options:{
+          urls:[process.env.RABBITMQ_URL ?? 'amqp://localhost:5672'],
+          queue:process.env.MEDIA_QUEUE  ?? 'media_queue',
+          queueOptions:{
+            durable: false,
+          }
+        }
       }
     ])
   ],

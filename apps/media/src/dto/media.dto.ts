@@ -28,3 +28,9 @@ export class AttachToProductDto{
     @IsOptional()
     attachedByUserId?:string
 }
+
+
+export class DeleteMediaFromDBandCloudByProductIdDto{
+    @IsString()
+    productId:string
+}
