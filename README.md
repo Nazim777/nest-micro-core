@@ -1,98 +1,207 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# nest-micro-core
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A scalable **NestJS microservice-based application** built with a gateway architecture, event-driven communication, and role-based security.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+This project demonstrates how to design and manage multiple microservices using **NestJS**, **RabbitMQ**, and **MongoDB**, with a centralized gateway handling authentication and access control.
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 🧱 Architecture Overview
 
-## Project setup
+The system is composed of **4 services**:
 
-```bash
-$ npm install
+### 1. Gateway Service
+
+* Acts as the **entry point** for all client requests
+* Communicates with other microservices
+* Handles:
+
+  * Authentication (Clerk)
+  * Role-based access control (RBAC)
+  * Public & admin-only routes
+
+### 2. Catalog Service
+
+* Manages **product-related operations**
+* Creates and updates product data
+* Emits events when a product is created
+
+### 3. Media Service
+
+* Handles **image uploads**
+* Uploads media to **Cloudinary**
+* Returns uploaded image URLs
+
+### 4. Search Service
+
+* Indexes products for **search functionality**
+* Listens to product creation events
+* Stores searchable product data
+
+---
+
+## 🔁 Communication Pattern
+
+This application uses **RabbitMQ** for asynchronous communication between services.
+
+### Patterns Used
+
+* **Message Pattern** → For request/response communication
+* **Event Pattern** → For emitting domain events
+
+### Product Creation Flow
+
+1. User creates a product via **Gateway**
+2. Gateway sends a message to **Catalog Service**
+3. Catalog Service:
+
+   * Creates the product
+   * Emits a `product_created` event
+4. Media Service:
+
+   * Listens to the event
+   * Uploads image to Cloudinary
+   * Returns image URL
+5. Search Service:
+
+   * Listens to the same event
+   * Creates a searchable record
+
+---
+
+## 🔐 Authentication & Authorization
+
+### Authentication
+
+* Uses **Clerk** for authentication
+* All routes are **protected by default**
+* Only authenticated users can access APIs
+
+### Public Routes
+
+* Custom `@Public()` decorator
+* Allows unauthenticated access when explicitly applied
+
+### Admin Routes
+
+* Custom `@Admin()` decorator
+* Only users with **admin role** can access
+* Enforced via guards
+
+---
+
+## 🗄️ Database
+
+* **MongoDB** as the primary database
+* **Mongoose** as the ODM
+* Separate databases for each service:
+
+  * Catalog DB
+  * Media DB
+  * Search DB
+
+This ensures loose coupling and service independence.
+
+---
+
+## 📦 Tech Stack
+
+* **NestJS** – Backend framework
+* **MongoDB** – Database
+* **Mongoose** – ODM
+* **RabbitMQ** – Message broker
+* **Cloudinary** – Media storage
+* **Clerk** – Authentication
+
+---
+
+## ⚙️ Environment Variables
+
+Create a `.env` file in the root of the project and configure the following:
+
+```env
+# Gateway\ nGATEWAY_PORT=
+
+# Microservices (TCP)
+CATALOG_TCP_PORT=
+MEDIA_TCP_PORT=
+SEARCH_TCP_PORT=
+
+# RabbitMQ
+RABBITMQ_URL=
+
+CATALOG_QUEUE=
+SEARCH_QUEUE=
+MEDIA_QUEUE=
+
+# Clerk Authentication
+CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
+
+# MongoDB
+MONGO_URI=
+MONGO_URI_CATALOG=
+MONGO_URI_MEDIA=
+MONGO_URI_SEARCH=
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
 ```
 
-## Compile and run the project
+---
+
+## 🚀 Running the Project
+
+1. Install dependencies:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm install
 ```
 
-## Run tests
+2. Start RabbitMQ
+
+3. Run services individually:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm run start gateway --watch
+npm run start catalog --watch
+npm run start media --watch
+npm run start search --watch
 ```
 
-## Deployment
+Or use a process manager (PM2 / Docker) for production.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+---
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## 📌 Key Features
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+* Microservice architecture
+* Event-driven communication
+* Secure gateway
+* Role-based access control
+* Media upload & search indexing
+* Scalable and maintainable design
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+---
 
-## Resources
+## 📄 License
 
-Check out a few resources that may come in handy when working with NestJS:
+MIT License
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+---
 
-## Support
+**Project Name:** `nest-micro-core`
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+---
 
-## Stay in touch
+## 👤 Author
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+**Mohammad Nazim Hossain**
+Full Stack Developer
 
-## License
+---
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Built with ❤️ using NestJS microservices
+
